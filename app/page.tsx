@@ -6,12 +6,16 @@ import remarkGfm from "remark-gfm";
 import { motion, AnimatePresence } from "framer-motion";
 import { useChat } from "@ai-sdk/react";
 import { Button } from "@/components/ui/button";
-import { ArrowDownCircleIcon, MessageCircle, X } from "lucide-react";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowDownCircleIcon, Loader2, MessageCircle, Send, X } from "lucide-react";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 export default function Chat() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showChatIcon, setShowChatIcon] = useState(false);
   const chatIconRef = useRef<HTMLButtonElement>(null);
+
+  const { messages, input, handleInputChange, handleSubmit, isLoading, stop, reload, error } = useChat({ api: "/api/gemini" });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,10 +55,10 @@ export default function Chat() {
       <AnimatePresence>
         {isChatOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 70, x: 230, scale: 0 }}
+            initial={{ opacity: 0, y: 220, x: 230, scale: 0 }}
             animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 70, x: 230, scale: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
+            exit={{ opacity: 0, y: 220, x: 230, scale: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             className="fixed bottom-20 right-6 z-50 w-[95%] md:w-[500px] rounded-lg">
             <Card className="border-2">
               <CardHeader className="flex flex-row space-y-0 items-center justify-between pb-3">
@@ -64,6 +68,40 @@ export default function Chat() {
                   <span className="sr-only"> Close Chat </span>
                 </Button>
               </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[300px] pr-4">
+                  {messages?.length === 0 && <div className="w-full mt-32 text-gray-500 flex gap-3 items-center justify-center">No messages yet.</div>}
+                  {messages?.map((message, index) => (
+                    <div key={index} className="flex flex-col items-center space-y-2 px-4 py-3 text-sm">
+                      fdsdd
+                    </div>
+                  ))}
+                  {isLoading && (
+                    <div className="w-full items-center flex justify-center gap-3">
+                      <Loader2 className="h-5 w-5 text-primary animate-spin" />
+                      <button className="underline" type="button" onClick={() => stop()}>
+                        abort
+                      </button>
+                    </div>
+                  )}
+                  {error && (
+                    <div className="w-full items-center flex justify-center gap-3">
+                      <div>An error occurred</div>
+                      <button className="underline" type="button" onClick={() => reload()}>
+                        Retry
+                      </button>
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+              <CardFooter>
+                <form onSubmit={handleSubmit} className="flex w-full items-center space-x-2">
+                  <Input value={input} onChange={handleInputChange} className="flex-1" placeholder="Type your message here..." />
+                  <Button type="submit" className="size-9" size="icon" disabled={isLoading}>
+                    <Send className="size-4" />
+                  </Button>
+                </form>
+              </CardFooter>
             </Card>
           </motion.div>
         )}

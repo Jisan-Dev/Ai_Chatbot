@@ -14,6 +14,7 @@ export default function Chat() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showChatIcon, setShowChatIcon] = useState(false);
   const chatIconRef = useRef<HTMLButtonElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const { messages, input, handleInputChange, handleSubmit, isLoading, stop, reload, error } = useChat({ api: "/api/gemini" });
 
@@ -34,6 +35,13 @@ export default function Chat() {
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
   };
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      // scrollRef.current.scrollTo({top: scrollRef.current.scrollHeight, behavior:'smooth'})
+      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -72,8 +80,28 @@ export default function Chat() {
                 <ScrollArea className="h-[300px] pr-4">
                   {messages?.length === 0 && <div className="w-full mt-32 text-gray-500 flex gap-3 items-center justify-center">No messages yet.</div>}
                   {messages?.map((message, index) => (
-                    <div key={index} className="flex flex-col items-center space-y-2 px-4 py-3 text-sm">
-                      fdsdd
+                    <div key={index} className={`mb-4 ${message.role === "user" ? "text-right" : "text-left"}`}>
+                      <div className={`inline-block rounded-lg p-3 ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                        <ReactMarkdown
+                          children={message.content}
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            code({ node, inline, className, children, ...props }: any) {
+                              return inline ? (
+                                <code {...props} className="bg-gray-200 px-1 rounded">
+                                  {children}
+                                </code>
+                              ) : (
+                                <pre {...props} className="bg-gray-200 px-1 rounded">
+                                  <code>{children}</code>
+                                </pre>
+                              );
+                            },
+                            ul: ({ children }) => <ul className="list-disc ml-4 my-2">{children}</ul>,
+                            ol: ({ children }) => <ol className="list-decimal ml-4 my-2">{children}</ol>,
+                          }}
+                        />
+                      </div>
                     </div>
                   ))}
                   {isLoading && (
@@ -92,6 +120,7 @@ export default function Chat() {
                       </button>
                     </div>
                   )}
+                  <div ref={scrollRef} />
                 </ScrollArea>
               </CardContent>
               <CardFooter>
